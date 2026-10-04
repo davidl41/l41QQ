@@ -12,8 +12,8 @@ import { PresetCharacter, PresetPrompt } from '../types/veo';
  * 【提示】：在页面界面的「预设角色」栏右侧，也提供了「➕ 添加我的预设」按钮，
  * 可以直接在网页里拖拽/粘贴/上传图片并永久保存到您的预设库中！
  */
-export const USER_CUSTOM_IMAGE_DATA: string = '';
-export const USER_CUSTOM_CHARACTER_NAME: string = '奶茶萌妹';
+export const USER_CUSTOM_IMAGE_DATA: string = '/whale-maid.jpg';
+export const USER_CUSTOM_CHARACTER_NAME: string = '爱希娜雨妲海 (蓝鲸女仆)';
 
 export const DEFAULT_USER_PROMPT =
   '一镜到底，3D卡通动画，明亮厨房/餐桌背景。开场镜头正面中近景对着一个圆滚滚、软萌可爱的角色，角色眨眼、嘴角上扬。随后镜头快速环绕/甩到角色身后，角色转身，画面豁然出现一座巨大的雪白米饭山，热气腾腾，米粒粒粒分明，像布丁一样微微晃动。角色双手从底部一把托起整座米饭山，动作带夸张的Q弹果冻感，挤压拉伸，米饭山“duang”地回弹，角色身体也跟着弹一下。接着角色嘴巴夸张张到巨大，像黑洞一样，一口把整座米饭山吞下，脸颊鼓成球，咀嚼时脸和身体像果冻一样Q弹抖动。最后吞咽，肚子圆圆鼓起，满足地打嗝，米饭山消失，角色像果冻一样弹两下。镜头轻微跟随，喜剧节奏，慢动作到加速，软萌Q弹物理，高帧率，光滑3D渲染，色彩鲜艳，无文字。';

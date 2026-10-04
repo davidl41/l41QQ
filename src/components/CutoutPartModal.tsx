@@ -402,6 +402,9 @@ export const CutoutPartModal: React.FC<CutoutPartModalProps> = ({
 
     onAddPart(newPart);
     onClose();
+    setTimeout(() => {
+      alert(`✨ 成功添加【${newPart.name}】！\n\n💡 提示：提取独立部位时请“一个部位一次提取”。如需添加其他部位（如另一只耳朵或呆毛），请再次点击【从原图抠图添加】继续提取！`);
+    }, 120);
   };
 
   if (!isOpen) return null;
@@ -434,6 +437,17 @@ export const CutoutPartModal: React.FC<CutoutPartModalProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* 重要操作提示：一个部位一次提取 */}
+        <div className="bg-amber-50 border-b border-amber-200 px-5 py-2.5 flex items-center gap-2.5 text-xs text-amber-900 shrink-0">
+          <span className="text-base shrink-0">💡</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold text-amber-950">重要提取原则：一个部位一次提取！</span>
+            <span className="text-[11px] text-amber-800">
+              请<strong>单独涂抹/框选一个完整部位</strong>（例如：先单独提取<strong>左耳</strong>，完成后再点开提取<strong>右耳</strong>或<strong>呆毛</strong>），切勿一次涂抹多个分散部位，以便每个部位能 1:1 独立绑定锚点、自由旋转与晃动！
+            </span>
+          </div>
         </div>
 
         {/* Modal Body: Tools + Canvas */}

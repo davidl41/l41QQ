@@ -652,7 +652,7 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
 
     onAddBouncePart(newPart);
     clearLocalMask();
-    alert('✨ 成功提取为独立回弹部位！已绑定专属固定点，可在下方控制台中自由挪动、旋转、复制与设置专属动效！');
+    alert('✨ 成功提取独立回弹部位！\n\n💡 提示：提取独立部位时请“一个部位一次提取”。现在可以继续用画笔涂抹提取下一个部位（如另一只耳朵或呆毛）！');
   };
 
   return (
@@ -944,7 +944,14 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
         </div>
       ) : (
         /* TAB 2: Local Bounce Mask Brush Toolbar */
-        <div className="bg-rose-50/70 p-3 rounded-xl border border-rose-200/90 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          {/* 单部位一次提取提示 */}
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-2">
+            <span className="text-base shrink-0">💡</span>
+            <span><strong>提取原则：一个部位一次提取！</strong>例如：先涂抹提取<strong>左耳</strong>并点击右侧【提取为独立部位】，完成后再涂抹提取<strong>右耳</strong>或<strong>呆毛</strong>，确保 1:1 独立绑定锚点！</span>
+          </div>
+
+          <div className="bg-rose-50/70 p-3 rounded-xl border border-rose-200/90 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-rose-900 flex items-center gap-1">
               <Paintbrush className="w-3.5 h-3.5 text-rose-600" />
@@ -997,6 +1004,7 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
             )}
           </div>
         </div>
+      </div>
       )}
 
       {/* Sliders: Tolerance / Brush Size */}

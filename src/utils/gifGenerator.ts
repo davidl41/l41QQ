@@ -139,11 +139,41 @@ function computeRawTransform(
 
     case 'jelly-duang': {
       const eased = evaluateEasingPhase(phase, easing);
-      const theta = 2 * Math.PI * eased;
-      const compression = Math.cos(theta);
-      const scaleY = 1 - amp * 1.15 * compression;
-      const scaleX = 1 + amp * 1.3 * compression + 0.15 * amp * Math.sin(2 * theta);
-      const translateY = -amp * 20 * Math.max(0, -compression);
+      let scaleX = 1;
+      let scaleY = 1;
+      let translateY = 0;
+
+      if (eased < 0.25) {
+        // Stage 1: 蓄力深蹲蓄势 (0% ~ 25%)
+        const t = eased / 0.25;
+        const squat = Math.sin(Math.PI * t * 0.5);
+        scaleY = 1 - amp * 1.4 * squat;
+        scaleX = 1 + amp * 1.5 * squat;
+        translateY = 0;
+      } else if (eased < 0.52) {
+        // Stage 2: 瞬间爆发回弹拉伸滞空 (25% ~ 52%)
+        const t = (eased - 0.25) / 0.27;
+        const launch = Math.sin(Math.PI * t);
+        scaleY = 1 + amp * 1.35 * launch;
+        scaleX = 1 - amp * 0.7 * launch;
+        translateY = -amp * 38 * Math.sin(Math.PI * t);
+      } else if (eased < 0.76) {
+        // Stage 3: 重力下坠触地二次Duang形变 (52% ~ 76%)
+        const t = (eased - 0.52) / 0.24;
+        const impact = Math.sin(Math.PI * t);
+        scaleY = 1 - amp * 0.7 * impact;
+        scaleX = 1 + amp * 0.8 * impact;
+        translateY = 0;
+      } else {
+        // Stage 4: 阻尼微颤逐渐平息 (76% ~ 100%)
+        const t = (eased - 0.76) / 0.24;
+        const decay = Math.exp(-3.5 * t);
+        const ripple = Math.sin(4 * Math.PI * t) * decay;
+        scaleY = 1 + amp * 0.35 * ripple;
+        scaleX = 1 - amp * 0.35 * ripple;
+        translateY = 0;
+      }
+
       return {
         scaleX,
         scaleY,
@@ -616,7 +646,7 @@ export function drawBounceFrame(
         const bellyCurve = Math.sin(Math.PI * Math.pow(yRatio, 0.85));
         const sliceW = drawW * Math.max(0.4, 1 + bulgeFactor * bellyCurve * 1.4);
         const sliceX = -sliceW * bodyTransform.anchorX;
-        const sliceY = imgOffsetY + s * sliceH * bodyTransform.scaleY;
+        const sliceY = -drawH * bodyTransform.anchorY * bodyTransform.scaleY + s * sliceH * bodyTransform.scaleY;
 
         targetCtx.drawImage(
           bodySourceToDraw,

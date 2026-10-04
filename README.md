@@ -1,20 +1,33 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# l41果冻铺 · 角色智能抠图与 Q 弹果冻动图工坊
 
-# Run and deploy your AI Studio app
+> 专业的角色智能抠图去底、Q 弹果冻物理动效、弹簧摇摆与呆毛/耳朵独立回弹生成器，支持一键导出超清纯透明 GIF 表情包、WebP、雪碧图与序列帧！
 
-This contains everything you need to run your app locally.
+## ✨ 核心特色功能
 
-View your app in AI Studio: https://ai.studio/apps/4d3c1693-bae0-4457-b759-22fff5dddaf0
+- ✂️ **工业级智能抠图**：人眼加权感知色差，全周界密集采样，智能去除淡色/粉色背景，边缘柔化去晕与抗锯齿，支持多步撤销重做（`Ctrl+Z` / `Ctrl+Y`）与图片 90°/180° 旋转。
+- 🍮 **Q 弹果冻物理引擎**：经典果冻 Duang、弹簧左右摇摆、布丁高频微颤、蹦床超弹跳等开箱即用动作预设，支持 0°~360° 任意回弹物理角度自调与真实体积守恒（Squash & Stretch）肉感膨胀联动。
+- 📏 **线段缝合扎根锚点（防脱节专属）**：支持单点支点与线段底边缝合线模式，底边牢固贴合身体，发尖与耳尖弹性晃动，耳朵永不脱节！
+- 💬 **贴图挂件与表情文字气泡**：从原图抠出局部、上传自制贴纸或一键添加漫画表情文字（黑白描边、粉萌泡泡、对话气泡、爆裂气泡），自带 1:1 独立扎根锚点、支持拖动挪位、自由旋转、水平镜像翻转、图层上下排序与一键复制！
+- 🍬 **彩色软糖粒子冲击波**：落地触地迸发草莓粉、薄荷绿、苏打蓝高光糖滴与闪烁星芒 ✨。
+- 🔊 **原生 Web Audio Q 弹音效**：拉扯果冻松手回弹伴随治愈可爱的“Boing~ Duang~”软萌音效。
+- 📦 **免安装单文件版**：内置 `果冻工坊_双击直接打开.html`，无需安装任何环境，双击直接用！
 
-## Run Locally
+## 🚀 快速开始
 
-**Prerequisites:**  Node.js
+### 方式 1：双击即用（免配置）
+直接鼠标双击运行根目录下的 `果冻工坊_双击直接打开.html`，无需安装 Node.js，断网离线也能正常制作与导出 GIF！
 
+### 方式 2：本地工程运行
+1. 安装依赖：
+   ```bash
+   pnpm install
+   # 或 npm install
+   ```
+2. 启动开发服务：
+   ```bash
+   pnpm dev
+   ```
+3. 浏览器访问：`http://localhost:3000`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 📄 开源许可
+本项目遵循 [MIT License](LICENSE) 许可协议开源。

@@ -681,26 +681,59 @@ export const BounceControls: React.FC<BounceControlsProps> = ({
               <p className="text-[11px] text-slate-400">{easingInfo.desc}</p>
             </div>
 
-            {/* 真实体积守恒 (Squash & Stretch 物理膨胀联动) */}
-            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-sky-100 bg-white cursor-pointer hover:bg-sky-50/50 transition-colors">
-              <input
-                type="checkbox"
-                checked={config.volumeConservation ?? true}
-                onChange={(e) => onChange({ ...config, volumeConservation: e.target.checked })}
-                className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
-              />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <span>🎈 真实物理体积守恒 (Squash & Stretch)</span>
-                  <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 font-semibold">
-                    果冻膨胀联动
+            {/* 物理真实果冻增强开关组 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <label className="flex items-start gap-2 p-2.5 rounded-xl border border-sky-100 bg-white cursor-pointer hover:bg-sky-50/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={config.volumeConservation ?? true}
+                  onChange={(e) => onChange({ ...config, volumeConservation: e.target.checked })}
+                  className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4 mt-0.5 cursor-pointer shrink-0"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <span>🎈 物理体积守恒</span>
                   </span>
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  向下深蹲压扁时两侧自动向外肉感鼓胀，向上起跳拉伸时自然收腰缩进，赋予果冻十足肉感
-                </span>
-              </div>
-            </label>
+                  <span className="text-[10px] text-slate-400 leading-tight">
+                    压扁时两侧自然肉感膨胀
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2 p-2.5 rounded-xl border border-sky-100 bg-white cursor-pointer hover:bg-sky-50/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={config.jellyBulge ?? true}
+                  onChange={(e) => onChange({ ...config, jellyBulge: e.target.checked })}
+                  className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4 mt-0.5 cursor-pointer shrink-0"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <span>🍮 弧线抛物线鼓肚</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 leading-tight">
+                    非线性腰线饱满弧形形变
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2 p-2.5 rounded-xl border border-sky-100 bg-white cursor-pointer hover:bg-sky-50/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={config.jellyGloss ?? true}
+                  onChange={(e) => onChange({ ...config, jellyGloss: e.target.checked })}
+                  className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4 mt-0.5 cursor-pointer shrink-0"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <span>✨ 水润果冻弧形高光</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 leading-tight">
+                    日系动漫布丁高光质感
+                  </span>
+                </div>
+              </label>
+            </div>
 
             {/* 回弹物理方向 (0° ~ 360° 任意角度自调) */}
             <div className="bg-sky-50/60 p-3.5 rounded-xl border border-sky-200/80 flex flex-col gap-3">
@@ -1323,6 +1356,91 @@ export const BounceControls: React.FC<BounceControlsProps> = ({
                           >
                             100%
                           </button>
+                        </div>
+                      </div>
+
+                      {/* 专属弹力回弹方向角度 (0° ~ 360° 任意自调) */}
+                      <div className="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-700 flex items-center gap-1.5 text-xs">
+                            <Compass className="w-3.5 h-3.5 text-sky-600" />
+                            <span>专属弹力方向 (0° ~ 360° 任意角度自调)</span>
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={360}
+                              value={activePart.bounceDirectionAngle ?? 0}
+                              onChange={(e) => {
+                                const val = Math.max(0, Math.min(360, Number(e.target.value) || 0));
+                                handleUpdatePart(activePart.id, { bounceDirectionAngle: val });
+                              }}
+                              className="w-10 text-right font-mono font-bold text-sky-700 text-xs px-1 py-0.5 rounded border border-slate-200 focus:outline-none"
+                            />
+                            <span className="text-xs font-bold text-sky-700">°</span>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePart(activePart.id, { bounceDirectionAngle: 0 })}
+                              className="text-[11px] text-sky-600 hover:text-sky-800 hover:underline cursor-pointer ml-1"
+                            >
+                              垂直(0°)
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-200">
+                          {/* Visual compass needle */}
+                          <div
+                            className="w-8 h-8 rounded-full border border-sky-300 bg-sky-50/60 shadow-2xs flex items-center justify-center shrink-0 relative overflow-hidden"
+                            title={`当前部位弹力方向：${activePart.bounceDirectionAngle ?? 0}°`}
+                          >
+                            <div
+                              className="w-0.5 h-3.5 bg-sky-600 rounded-full origin-bottom"
+                              style={{
+                                transform: `rotate(${activePart.bounceDirectionAngle ?? 0}deg)`,
+                                transition: 'transform 0.1s ease-out',
+                              }}
+                            />
+                            <div className="w-1.5 h-1.5 rounded-full bg-sky-800 absolute" />
+                          </div>
+
+                          <div className="flex-1 flex flex-col gap-1.5">
+                            <input
+                              type="range"
+                              min={0}
+                              max={360}
+                              step={1}
+                              value={activePart.bounceDirectionAngle ?? 0}
+                              onChange={(e) =>
+                                handleUpdatePart(activePart.id, { bounceDirectionAngle: Number(e.target.value) })
+                              }
+                              className="w-full accent-sky-600 cursor-pointer"
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {[
+                                { angle: 0, label: '↑垂直' },
+                                { angle: 45, label: '↗斜45°' },
+                                { angle: 90, label: '→水平' },
+                                { angle: 135, label: '↘斜135°' },
+                                { angle: 180, label: '↓向下' },
+                                { angle: 315, label: '↖斜315°' },
+                              ].map((btn) => (
+                                <button
+                                  key={btn.angle}
+                                  type="button"
+                                  onClick={() => handleUpdatePart(activePart.id, { bounceDirectionAngle: btn.angle })}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors cursor-pointer ${
+                                    (activePart.bounceDirectionAngle ?? 0) === btn.angle
+                                      ? 'bg-sky-500 text-white font-bold border-sky-500'
+                                      : 'bg-slate-50 hover:bg-sky-50 text-slate-600 border-slate-200'
+                                  }`}
+                                >
+                                  {btn.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
 

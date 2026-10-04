@@ -427,7 +427,9 @@ export function drawBounceFrame(
   localMaskCanvas?: HTMLCanvasElement | null,
   localBounceConfig?: LocalBounceConfig,
   bounceDirection: BounceDirection = 'vertical',
-  bounceAngle: number = 0
+  bounceAngle: number = 0,
+  jellyBulge: boolean = true,
+  jellyGloss: boolean = false
 ): void {
   const w = targetSize;
   const h = targetSize;
@@ -598,15 +600,63 @@ export function drawBounceFrame(
       targetCtx.transform(1, bodyTransform.skewY || 0, bodyTransform.skewX || 0, 1, 0, 0);
     }
 
-    targetCtx.scale(bodyTransform.scaleX, bodyTransform.scaleY);
-    if (!onlyPartBounces && dirAngle !== 0) {
-      targetCtx.rotate(-dirAngle);
-    }
-
     const imgOffsetX = -drawW * bodyTransform.anchorX;
     const imgOffsetY = -drawH * bodyTransform.anchorY;
 
-    targetCtx.drawImage(bodySourceToDraw, imgOffsetX, imgOffsetY, drawW, drawH);
+    // 🍮 非线性果冻弧形鼓胀渲染 (让果冻挤压时肚子向外饱满弧形膨胀，起跳时收紧)
+    if (jellyBulge !== false && (Math.abs(bodyTransform.scaleX - 1) > 0.015 || Math.abs(bodyTransform.scaleY - 1) > 0.015)) {
+      const slices = 56;
+      const sliceH = drawH / slices;
+      const srcSliceH = sourceH / slices;
+      const bulgeFactor = bodyTransform.scaleX - 1;
+
+      for (let s = 0; s < slices; s++) {
+        const yRatio = s / slices;
+        // Parabolic belly curve (0 at top and bottom, peak at belly yRatio=0.55)
+        const bellyCurve = Math.sin(Math.PI * Math.pow(yRatio, 0.85));
+        const sliceW = drawW * Math.max(0.4, 1 + bulgeFactor * bellyCurve * 1.4);
+        const sliceX = -sliceW * bodyTransform.anchorX;
+        const sliceY = imgOffsetY + s * sliceH * bodyTransform.scaleY;
+
+        targetCtx.drawImage(
+          bodySourceToDraw,
+          0,
+          s * srcSliceH,
+          sourceW,
+          srcSliceH,
+          sliceX,
+          sliceY,
+          sliceW,
+          sliceH * bodyTransform.scaleY + 0.6
+        );
+      }
+    } else {
+      targetCtx.scale(bodyTransform.scaleX, bodyTransform.scaleY);
+      if (!onlyPartBounces && dirAngle !== 0) {
+        targetCtx.rotate(-dirAngle);
+      }
+      targetCtx.drawImage(bodySourceToDraw, imgOffsetX, imgOffsetY, drawW, drawH);
+    }
+
+    // ✨ 水润果冻弧形高光反光层 (日系动漫布丁高光质感)
+    if (jellyGloss) {
+      const glossX = imgOffsetX + drawW * 0.28;
+      const glossY = imgOffsetY + drawH * 0.22;
+      const glossW = drawW * 0.22 * Math.max(0.6, bodyTransform.scaleX);
+      const glossH = drawH * 0.09 * Math.max(0.6, bodyTransform.scaleY);
+
+      targetCtx.save();
+      targetCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      targetCtx.beginPath();
+      targetCtx.ellipse(glossX, glossY, glossW, glossH, -Math.PI / 6, 0, Math.PI * 2);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      targetCtx.beginPath();
+      targetCtx.arc(glossX - glossW * 0.35, glossY - glossH * 0.15, 3.5, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.restore();
+    }
   }
 
   targetCtx.restore();
@@ -928,7 +978,9 @@ export async function generateQElasticGif(
       localMaskCanvas,
       localBounce,
       config.bounceDirection,
-      config.bounceAngle
+      config.bounceAngle,
+      config.jellyBulge ?? true,
+      config.jellyGloss ?? false
     );
 
     const imgData = ctx.getImageData(0, 0, outputSize, outputSize);
@@ -978,7 +1030,9 @@ export async function generateQElasticGif(
       localMaskCanvas,
       localBounce,
       config.bounceDirection,
-      config.bounceAngle
+      config.bounceAngle,
+      config.jellyBulge ?? true,
+      config.jellyGloss ?? false
     );
 
     const imgData = ctx.getImageData(0, 0, outputSize, outputSize);
@@ -1122,7 +1176,9 @@ export async function generateSpritesheetPng(
       localMaskCanvas,
       localBounce,
       config.bounceDirection,
-      config.bounceAngle
+      config.bounceAngle,
+      config.jellyBulge ?? true,
+      config.jellyGloss ?? false
     );
 
     const col = i % cols;
@@ -1194,7 +1250,9 @@ export async function generateZipFrames(
       localMaskCanvas,
       localBounce,
       config.bounceDirection,
-      config.bounceAngle
+      config.bounceAngle,
+      config.jellyBulge ?? true,
+      config.jellyGloss ?? false
     );
 
     const blob = await new Promise<Blob>((resolve) => {
@@ -1290,7 +1348,9 @@ export async function generateAnimatedWebp(
       localMaskCanvas,
       localBounce,
       config.bounceDirection,
-      config.bounceAngle
+      config.bounceAngle,
+      config.jellyBulge ?? true,
+      config.jellyGloss ?? false
     );
 
     if (onProgress) {

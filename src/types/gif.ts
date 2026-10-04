@@ -77,6 +77,7 @@ export interface BouncePart {
 
   // 独立回弹形态与动力学配置
   motion?: 'spring' | 'orbit-spin' | 'jiggle' | 'sway' | 'breathe';
+  bounceDirectionAngle?: number; // 独立弹力方向角度 (0° ~ 360°，任意自调摇摆与回弹倾斜方向)
   amplitudeMult?: number;  // 独立幅度倍率，默认 1.0
   speedMult?: number;      // 独立频率倍率，默认 1.0
   easing?: number;         // 独立物理重力缓动阻尼手感 (0 ~ 100)
@@ -147,6 +148,8 @@ export interface BounceConfig {
   // 漫画特效挂件与物理增强
   accessory: AccessoryConfig;
   volumeConservation?: boolean; // 真实物理体积守恒膨胀联动 (挤压时两侧自然鼓胀，拉伸时收缩)
+  jellyBulge?: boolean;          // 非线性果冻弧形弧线鼓胀 (让下蹲挤压时腰线呈现真实饱满的抛物线弧度)
+  jellyGloss?: boolean;          // 水润果冻弧形高光反光层 (日系高光闪耀质感)
   groundShadow: boolean; // 动态受光地面阴影
   impactRipple: boolean; // 落地触地软糖冲击波
   wechatOptimized: boolean; // 微信表情包规范适配模式 (<1MB, 240px)

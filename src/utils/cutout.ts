@@ -92,7 +92,9 @@ export function removeBorderBackground(
   const queue: number[] = [];
 
   const checkBgMatch = (r: number, g: number, b: number): { isMatch: boolean; softFactor: number } => {
-    if (r > 246 && g > 246 && b > 246 && tolerance >= 12) {
+    // 自动清除纯白背景、浅灰色阴影以及外围淡灰色水印 (如 R>188 且低饱和度)
+    const isNeutralLight = (r > 185 && g > 185 && b > 185 && Math.abs(r - g) < 24 && Math.abs(g - b) < 24 && Math.abs(r - b) < 24);
+    if (isNeutralLight) {
       return { isMatch: true, softFactor: 0 };
     }
 
@@ -413,4 +415,76 @@ export function trimTransparent(canvas: HTMLCanvasElement, padding = 12): HTMLCa
   tCtx.drawImage(canvas, minX, minY, trimW, trimH, 0, 0, trimW, trimH);
 
   return trimmedCanvas;
+}
+/**
+ * Inpaint / infill a cleared cutout hole with surrounding edge colors
+ * Bleeds surrounding hair / skin colors inward so moving/tilting ears never exposes background
+ */
+export function inpaintCutoutHole(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  padding = 10
+): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const minX = Math.max(0, Math.floor(x - padding));
+  const minY = Math.max(0, Math.floor(y - padding));
+  const maxX = Math.min(canvas.width, Math.ceil(x + w + padding));
+  const maxY = Math.min(canvas.height, Math.ceil(y + h + padding));
+  const boxW = maxX - minX;
+  const boxH = maxY - minY;
+  if (boxW <= 0 || boxH <= 0) return;
+
+  const imgData = ctx.getImageData(minX, minY, boxW, boxH);
+  const data = imgData.data;
+
+  // 14 passes of inward color dilation
+  const passes = 14;
+  for (let pass = 0; pass < passes; pass++) {
+    const fills: { idx: number; r: number; g: number; b: number }[] = [];
+
+    for (let py = 1; py < boxH - 1; py++) {
+      for (let px = 1; px < boxW - 1; px++) {
+        const idx = (py * boxW + px) * 4;
+        if (data[idx + 3] === 0) {
+          let sumR = 0, sumG = 0, sumB = 0, count = 0;
+          const neighbors = [-boxW - 1, -boxW, -boxW + 1, -1, 1, boxW - 1, boxW, boxW + 1];
+
+          for (const n of neighbors) {
+            const nIdx = idx + n * 4;
+            if (data[nIdx + 3] > 180) {
+              sumR += data[nIdx];
+              sumG += data[nIdx + 1];
+              sumB += data[nIdx + 2];
+              count++;
+            }
+          }
+
+          if (count > 0) {
+            fills.push({
+              idx,
+              r: Math.round(sumR / count),
+              g: Math.round(sumG / count),
+              b: Math.round(sumB / count),
+            });
+          }
+        }
+      }
+    }
+
+    if (fills.length === 0) break;
+
+    for (const f of fills) {
+      data[f.idx] = f.r;
+      data[f.idx + 1] = f.g;
+      data[f.idx + 2] = f.b;
+      data[f.idx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imgData, minX, minY);
 }

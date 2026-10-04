@@ -331,6 +331,15 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
     notifyUpdated();
   };
 
+  const handleDeepCleanBackground = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    saveUndoSnapshot();
+    removeBorderBackground(canvas, Math.max(38, Math.round(tolerance * 1.35)));
+    smoothEdgeAntiAliasing(canvas);
+    notifyUpdated();
+  };
+
   const handleSmoothEdges = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -821,6 +830,15 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-sky-600" />
               <span>边缘平滑抗锯齿</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDeepCleanBackground}
+              className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-800 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs active:scale-95 cursor-pointer"
+              title="一键清除外围阴影、水印及淡色残片"
+            >
+              <span>🧹 强力除水印阴影</span>
             </button>
 
             <button

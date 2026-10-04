@@ -85,6 +85,7 @@ export interface BouncePart {
 
   // 是否挖空原身体对应区域（原图抠出默认为 true，上传贴纸/复制副本为 false）
   hollowOutBody?: boolean;
+  autoInfill?: boolean;    // 智能自动修补底色 (用周围发丝/肤色补全被挖空部位，防挪动或旋转时漏出背景)
   visible?: boolean;       // 是否可见，默认 true
 }
 

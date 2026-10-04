@@ -10,6 +10,7 @@ import {
   BouncePart,
 } from '../types/gif';
 import { drawGroundShadowAndRipple, drawComicAccessory } from './accessoriesRenderer';
+import { inpaintCutoutHole } from './cutout';
 
 // Cache for decoded part images so animation frames render synchronously without blinking
 const partImageCache = new Map<string, HTMLImageElement>();
@@ -533,6 +534,11 @@ export function drawBounceFrame(
             bCtx.drawImage(pImg, p.sourceX, p.sourceY, p.sourceW, p.sourceH);
           } else {
             bCtx.clearRect(p.sourceX, p.sourceY, p.sourceW, p.sourceH);
+          }
+
+          // 🎨 智能自动补底：将挖空区域用周围邻近发丝/肤色平滑补全，防挪动或旋转耳朵时露出背景！
+          if (p.autoInfill !== false && (p.type === 'cutout' || !p.type)) {
+            inpaintCutoutHole(bodyC, p.sourceX, p.sourceY, p.sourceW, p.sourceH);
           }
         }
       }

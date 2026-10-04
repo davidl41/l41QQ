@@ -1541,18 +1541,37 @@ export const BounceControls: React.FC<BounceControlsProps> = ({
                         </div>
                       </div>
 
-                      {/* 挖空身体对应区域勾选框 */}
-                      <label className="flex items-center gap-2 text-xs text-slate-600 pt-1 border-t border-stone-100 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={activePart.hollowOutBody ?? (activePart.type === 'cutout')}
-                          onChange={(e) =>
-                            handleUpdatePart(activePart.id, { hollowOutBody: e.target.checked })
-                          }
-                          className="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5 cursor-pointer"
-                        />
-                        <span>在人物身体原图上挖空此区域（防止原图抠出部位挪动或摇摆时露出原图重影）</span>
-                      </label>
+                      {/* 挖空身体与智能补底防露背景 */}
+                      <div className="flex flex-col gap-1.5 pt-2 border-t border-stone-100">
+                        <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={activePart.autoInfill ?? true}
+                            onChange={(e) =>
+                              handleUpdatePart(activePart.id, { autoInfill: e.target.checked })
+                            }
+                            className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                          />
+                          <span className="font-bold text-sky-900 flex items-center gap-1">
+                            <span>🎨 智能自动修补底色（防露背景断层 · 强烈推荐）</span>
+                          </span>
+                        </label>
+                        <p className="text-[10px] text-slate-500 pl-6 leading-relaxed">
+                          用周围发丝/肤色自动补齐被挖空部位下方的身体区域。挪动、旋转或耳朵大幅度摇摆时，下方永远饱满连接，绝不漏空露出背景！
+                        </p>
+
+                        <label className="flex items-center gap-2 text-[11px] text-slate-500 pl-6 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={activePart.hollowOutBody ?? (activePart.type === 'cutout')}
+                            onChange={(e) =>
+                              handleUpdatePart(activePart.id, { hollowOutBody: e.target.checked })
+                            }
+                            className="rounded text-slate-400 focus:ring-slate-400 w-3 h-3 cursor-pointer"
+                          />
+                          <span>挖空人物身体底图（避免部位原位重影）</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>

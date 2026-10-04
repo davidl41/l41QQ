@@ -1,0 +1,6 @@
+{
+  "name": "Q弹果冻GIF制作器 - 智能抠图与鼓动动图",
+  "description": "角色照片一键抠图去底，实时生成果冻 Q 弹挤压拉伸与呼吸鼓动动画，导出高清透明 GIF 表情包。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

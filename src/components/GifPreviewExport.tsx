@@ -343,6 +343,36 @@ export const GifPreviewExport: React.FC<GifPreviewExportProps> = ({
               ctx.textAlign = 'center';
               ctx.textBaseline = 'alphabetic';
               ctx.fillText(labelLine, midX, midY - 13);
+
+              // 绘制弹力方向指示箭头 🧭
+              const dirAngleRad = ((activePart.bounceDirectionAngle || 0) * Math.PI) / 180;
+              const arrowLen = 34;
+              const arrowEndX = midX + Math.sin(dirAngleRad) * arrowLen;
+              const arrowEndY = midY - Math.cos(dirAngleRad) * arrowLen;
+
+              ctx.strokeStyle = '#f43f5e';
+              ctx.lineWidth = 2.5;
+              ctx.setLineDash([]);
+              ctx.beginPath();
+              ctx.moveTo(midX, midY);
+              ctx.lineTo(arrowEndX, arrowEndY);
+              ctx.stroke();
+
+              const headLen = 7;
+              const arrowAngle = Math.atan2(arrowEndY - midY, arrowEndX - midX);
+              ctx.fillStyle = '#f43f5e';
+              ctx.beginPath();
+              ctx.moveTo(arrowEndX, arrowEndY);
+              ctx.lineTo(
+                arrowEndX - headLen * Math.cos(arrowAngle - Math.PI / 6),
+                arrowEndY - headLen * Math.sin(arrowAngle - Math.PI / 6)
+              );
+              ctx.lineTo(
+                arrowEndX - headLen * Math.cos(arrowAngle + Math.PI / 6),
+                arrowEndY - headLen * Math.sin(arrowAngle + Math.PI / 6)
+              );
+              ctx.closePath();
+              ctx.fill();
             } else {
               // 📍 单点模式
               ctx.strokeStyle = isDragging ? '#0284c7' : 'rgba(2, 132, 199, 0.7)';

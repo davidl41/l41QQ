@@ -780,19 +780,14 @@ export function drawBounceFrame(
           dy = (part.sourceY - pinRatioY * sourceH) * scaleRatio;
         }
 
+        const pScale = part.scale ?? 1.0;
+        const mulX = (part.flipH ? -1 : 1) * pScale;
+        const mulY = (part.flipV ? -1 : 1) * pScale;
+
         if (onlyPartBounces) {
           const rootX = (anchorX - drawW * bodyTransform.anchorX) + pinRatioX * drawW + partOffX;
           const rootY = (anchorY - drawH * bodyTransform.anchorY) + pinRatioY * drawH + partOffY;
-
           targetCtx.translate(rootX, rootY);
-          if (userRotRad !== 0) targetCtx.rotate(userRotRad);
-          if (jiggleRot !== 0) targetCtx.rotate(jiggleRot);
-          const pScale = part.scale ?? 1.0;
-          const mulX = (part.flipH ? -1 : 1) * pScale;
-          const mulY = (part.flipV ? -1 : 1) * pScale;
-          targetCtx.scale(jiggleScaleX * mulX, jiggleScaleY * mulY);
-
-          targetCtx.drawImage(pImg, dx, dy, partDrawW, partDrawH);
         } else {
           targetCtx.translate(anchorX + transform.translateX, anchorY + transform.translateY);
           if (dirAngle !== 0) targetCtx.rotate(dirAngle);
@@ -801,15 +796,56 @@ export function drawBounceFrame(
 
           const relRootX = (pinRatioX - bodyTransform.anchorX) * drawW + partOffX;
           const relRootY = (pinRatioY - bodyTransform.anchorY) * drawH + partOffY;
-
           targetCtx.translate(relRootX, relRootY);
-          if (userRotRad !== 0) targetCtx.rotate(userRotRad);
-          if (jiggleRot !== 0) targetCtx.rotate(jiggleRot);
-          const pScale = part.scale ?? 1.0;
-          const mulX = (part.flipH ? -1 : 1) * pScale;
-          const mulY = (part.flipV ? -1 : 1) * pScale;
-          targetCtx.scale(jiggleScaleX * mulX, jiggleScaleY * mulY);
+        }
 
+        if (userRotRad !== 0) targetCtx.rotate(userRotRad);
+
+        // 弹力方向角度 (自调任意弹动方向 0°~360°)
+        const bounceDirRad = ((part.bounceDirectionAngle || 0) * Math.PI) / 180;
+
+        if (part.type === 'cutout' || !part.type) {
+          // 👂 耳朵/呆毛专用有机柔韧弯曲物理：
+          // 底部与扎根锚定线紧密重合，底边位移严格为 0 绝对不动，只有上部沿弹力方向柔顺弯曲甩动！
+          const slices = 36;
+          const sliceH = partDrawH / slices;
+          const srcSliceH = pImg.naturalHeight / slices;
+
+          // Oscillation along bounce direction
+          const oscMag = (jiggleRot !== 0 ? jiggleRot : (jiggleScaleX - 1) * 2.2) * partDrawW * 1.35;
+          const dirX = Math.sin(bounceDirRad !== 0 ? bounceDirRad : Math.PI / 2);
+          const dirY = -Math.cos(bounceDirRad !== 0 ? bounceDirRad : 0);
+
+          for (let s = 0; s < slices; s++) {
+            // s = slices - 1 为耳朵底部（紧贴身体锚定线），s = 0 为耳朵顶部尖尖
+            const v = (slices - 1 - s) / (slices - 1); // 0 at bottom seam, 1 at top tip
+            const weight = Math.pow(v, 1.55);
+
+            // 底部 v = 0 时，dispX = 0, dispY = 0！耳朵底部与锚定线完全重叠绝对不动！
+            const dispX = dirX * oscMag * weight;
+            const dispY = (bounceDirRad !== 0 ? dirY * oscMag * weight * 0.45 : 0);
+
+            targetCtx.save();
+            targetCtx.scale(mulX, mulY);
+            targetCtx.drawImage(
+              pImg,
+              0,
+              s * srcSliceH,
+              pImg.naturalWidth,
+              srcSliceH,
+              dx + dispX,
+              dy + s * sliceH + dispY,
+              partDrawW,
+              sliceH + 0.6
+            );
+            targetCtx.restore();
+          }
+        } else {
+          // 贴图/挂件/文字：按弹力方向自由弹射与晃动
+          if (bounceDirRad !== 0) targetCtx.rotate(bounceDirRad);
+          if (jiggleRot !== 0) targetCtx.rotate(jiggleRot);
+          targetCtx.scale(jiggleScaleX * mulX, jiggleScaleY * mulY);
+          if (bounceDirRad !== 0) targetCtx.rotate(-bounceDirRad);
           targetCtx.drawImage(pImg, dx, dy, partDrawW, partDrawH);
         }
 

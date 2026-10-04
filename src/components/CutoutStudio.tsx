@@ -47,6 +47,7 @@ interface CutoutStudioProps {
   onLocalMaskUpdated?: (canvas: HTMLCanvasElement | null) => void;
   onCustomAccessoryCreated?: (dataUrl: string) => void;
   onAddBouncePart?: (part: BouncePart) => void;
+  existingParts?: BouncePart[];
 }
 
 type StudioTab = 'cutout' | 'localMask';
@@ -57,6 +58,7 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
   onLocalMaskUpdated,
   onCustomAccessoryCreated,
   onAddBouncePart,
+  existingParts = [],
 }) => {
   const [activeTab, setActiveTab] = useState<StudioTab>('cutout');
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -372,26 +374,39 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
     notifyUpdated();
   };
 
-  const handleSaveCurrentAsPreset = () => {
+  // 扣完贴图再扣出主体
+  const handleCutoutBodyExcludingParts = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dataUrl = canvas.toDataURL('image/png');
-    const newId = `preset-${Date.now()}`;
-    const name = window.prompt('请输入预设角色名称：', '爱希娜雨妲海') || '自定义角色';
+    saveUndoSnapshot();
 
-    const newPreset: PresetCharacter = {
-      id: newId,
-      name,
-      title: `${name} (自定义预设)`,
-      description: '保存在本地浏览器的常驻预设角色',
-      avatarSvg: dataUrl,
-      imageDataUrl: dataUrl,
-    };
+    // 1. 智能去底
+    removeBorderBackground(canvas, tolerance);
+    smoothEdgeAntiAliasing(canvas);
 
-    saveStoredCustomPreset(newPreset);
-    setDefaultPresetId(newId);
-    setActivePresetId(newId);
-    refreshPresets();
+    // 2. 将所有已提取好的贴图/耳朵部位从主体中彻底扣除 (destination-out)
+    if (existingParts && existingParts.length > 0) {
+      const ctx = canvas.getContext('2d')!;
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+
+      for (const part of existingParts) {
+        if (part.type === 'cutout' || !part.type) {
+          const pImg = new Image();
+          pImg.src = part.imageDataUrl;
+          if (pImg.complete && pImg.naturalWidth > 0) {
+            ctx.drawImage(pImg, part.sourceX, part.sourceY, part.sourceW, part.sourceH);
+          } else {
+            ctx.clearRect(part.sourceX, part.sourceY, part.sourceW, part.sourceH);
+          }
+        }
+      }
+      ctx.restore();
+      smoothEdgeAntiAliasing(canvas);
+    }
+
+    notifyUpdated();
+    alert('✨ 成功扣出纯净主体！\n\n已将所有已提取贴图从主体中完全抠除，主体干净独立，贴图与主体各自独立回弹、绝无重叠！');
   };
 
   const handleModalSubmit = (e: React.FormEvent) => {
@@ -739,75 +754,39 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
         </div>
       </div>
 
-      {/* Preset Character Quick Row */}
-      <div className="flex flex-col gap-1.5 bg-sky-50/40 p-2.5 rounded-xl border border-sky-100">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+      {/* 预设角色选择栏 */}
+      {presets.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 bg-sky-50/40 p-2.5 rounded-xl border border-sky-100">
+          <span className="text-xs font-bold text-slate-700 shrink-0 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-            <span>开发者预设角色库 (已全部留空，由您自主添加预设)：</span>
+            <span>预设角色：</span>
           </span>
-
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold shadow-2xs transition-all active:scale-95"
-          >
-            <Plus className="w-3 h-3 stroke-[3]" />
-            <span>添加我的预设</span>
-          </button>
+          {presets.map((char) => {
+            const isSelected = activePresetId === char.id;
+            return (
+              <div
+                key={char.id}
+                onClick={() => {
+                  setActivePresetId(char.id);
+                  loadSourceImage(char.imageDataUrl);
+                }}
+                className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-slate-700 transition-all shrink-0 cursor-pointer ${
+                  isSelected
+                    ? 'border-sky-500 bg-sky-500 text-white font-bold shadow-2xs'
+                    : 'border-slate-200 hover:border-sky-300 bg-white hover:bg-sky-50/50'
+                }`}
+              >
+                <img
+                  src={char.avatarSvg}
+                  alt={char.name}
+                  className="w-6 h-6 rounded-full object-cover border border-white/50 shrink-0"
+                />
+                <span className="max-w-[120px] truncate">{char.name}</span>
+              </div>
+            );
+          })}
         </div>
-
-        {presets.length === 0 ? (
-          <div className="py-2.5 px-3 rounded-lg border border-dashed border-sky-300 text-xs text-slate-500 bg-white/70 flex items-center justify-between gap-2">
-            <span>当前预设角色库为空（已为您全部留空）。请点击右侧「➕ 添加我的预设」或点击上方「上传角色图片」添加您的专属预设！</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
-            {presets.map((char) => {
-              const isSelected = activePresetId === char.id;
-              const isCustom = char.id.startsWith('custom-') || char.id.startsWith('preset-');
-              const isHardcoded = char.id === 'hardcoded-custom';
-
-              return (
-                <div
-                  key={char.id}
-                  onClick={() => {
-                    setActivePresetId(char.id);
-                    loadSourceImage(char.imageDataUrl);
-                  }}
-                  className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-slate-700 transition-all shrink-0 cursor-pointer ${
-                    isSelected
-                      ? 'border-sky-500 bg-sky-500 text-white font-bold shadow-2xs'
-                      : 'border-slate-200 hover:border-sky-300 bg-white hover:bg-sky-50/50'
-                  }`}
-                >
-                  <img
-                    src={char.avatarSvg}
-                    alt={char.name}
-                    className="w-6 h-6 rounded-full object-cover border border-white/50 shrink-0"
-                  />
-                  <span className="max-w-[120px] truncate">{char.name}</span>
-                  {isHardcoded && (
-                    <span className="text-[9px] bg-sky-200 text-sky-900 px-1 rounded font-normal">
-                      源码配置
-                    </span>
-                  )}
-                  {isCustom && (
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeletePreset(char.id, e)}
-                      className="text-slate-400 hover:text-rose-500 p-0.5 rounded-md hover:bg-rose-50 transition-colors ml-0.5"
-                      title="删除此预设"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Mode-Specific Toolbar */}
       {activeTab === 'cutout' ? (
@@ -914,11 +893,12 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
 
             <button
               type="button"
-              onClick={handleSaveCurrentAsPreset}
-              className="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 text-xs font-semibold flex items-center gap-1"
+              onClick={handleCutoutBodyExcludingParts}
+              className="px-2.5 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="一键将已提取的所有贴图部位从人物身体中彻底抠除，生成纯净独立主体"
             >
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-              <span>存为预设</span>
+              <Scissors className="w-3.5 h-3.5 text-indigo-600" />
+              <span>扣完贴图再扣主体 ✂️</span>
             </button>
 
             <button
@@ -1181,117 +1161,6 @@ export const CutoutStudio: React.FC<CutoutStudioProps> = ({
           </span>
         </div>
       </div>
-
-      {/* Add Custom Preset Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200 relative">
-            <button
-              type="button"
-              onClick={() => setShowAddModal(false)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                <Plus className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-900">设置 / 添加自定义预设角色</h3>
-                <p className="text-xs text-stone-500">上传或粘贴您的立绘，将永久保存于本站预设库中</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleModalSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">角色名称</label>
-                <input
-                  type="text"
-                  value={newPresetName}
-                  onChange={(e) => setNewPresetName(e.target.value)}
-                  placeholder="例如：爱希娜雨妲海"
-                  className="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">角色立绘图片</label>
-                {newPresetImage ? (
-                  <div className="relative border-2 border-stone-200 rounded-xl p-3 flex flex-col items-center justify-center bg-stone-50">
-                    <img
-                      src={newPresetImage}
-                      alt="预览"
-                      className="max-h-[180px] object-contain rounded-lg drop-shadow"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setNewPresetImage('')}
-                      className="mt-2 text-xs text-rose-600 hover:underline flex items-center gap-1 font-medium"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>重新选择图片</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => modalFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-stone-300 hover:border-amber-500 bg-stone-50/70 hover:bg-amber-50/30 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all"
-                  >
-                    <input
-                      ref={modalFileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const reader = new FileReader();
-                          reader.onload = () => setNewPresetImage(reader.result as string);
-                          reader.readAsDataURL(e.target.files[0]);
-                        }
-                      }}
-                    />
-                    <Upload className="w-8 h-8 text-amber-500 mb-2" />
-                    <span className="text-xs font-bold text-stone-700">点击上传角色图片文件</span>
-                    <span className="text-[11px] text-stone-500 mt-1">
-                      选择电脑中的立绘或直接按 Ctrl+V 粘贴
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <label className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={setAsDefault}
-                  onChange={(e) => setSetAsDefault(e.target.checked)}
-                  className="accent-amber-500 rounded"
-                />
-                <span className="font-medium">设为开机默认角色（下次打开网站自动优先加载此图）</span>
-              </label>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl border border-stone-300 text-xs font-medium text-stone-700 hover:bg-stone-50"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={!newPresetImage}
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-all"
-                >
-                  保存并立即设为预设
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Custom Accessory Upload & Cutout Modal */}
       {showAccessoryModal && (

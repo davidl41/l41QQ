@@ -111,6 +111,7 @@ export default function App() {
               onCutoutUpdated={(c) => setCutoutCanvas(c)}
               onLocalMaskUpdated={(m) => setLocalMaskCanvas(m)}
               onAddBouncePart={handleAddBouncePart}
+              existingParts={bounceConfig.localBounce?.parts || []}
               onCustomAccessoryCreated={(url) => {
                 handleAddBouncePart({
                   id: `sticker_${Date.now()}`,

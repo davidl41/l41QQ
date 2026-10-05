@@ -139,33 +139,52 @@ function computeRawTransform(
     }
 
     case 'viral-doll': {
-      // 🧸 音乐互动娃娃原版物理算法 (来自 Wallpaper Engine 原版 physics.js: deformationCycle)
+      // 🧸 互动玩偶极致 Q 弹物理引擎 (复刻自 Wallpaper Engine 原版 physics.js + 动感惯性摆头与次级果冻微颤)
+      // 解决原先死板单轴伸缩的僵硬感：加入腾空离地感、布丁高频微颤与俏皮微倾摆头！
+      const eased = evaluateEasingPhase(phase, easing);
+      const theta = 2 * Math.PI * eased;
+
+      // 1. 核心形变周期 (0~0.44 下蹲卡点停一下, 0.44~0.60 极速反转弹射, 0.60~0.88 拔高悬停卡点, 0.88~1.00 触地反弹)
       const smooth = (t: number) => t * t * (3 - 2 * t);
       let pulse = 0;
-      if (phase < 0.44) {
+      if (eased < 0.44) {
         pulse = 1;
-      } else if (phase < 0.60) {
-        pulse = 1 - 2 * smooth((phase - 0.44) / 0.16);
-      } else if (phase < 0.88) {
+      } else if (eased < 0.60) {
+        pulse = 1 - 2 * smooth((eased - 0.44) / 0.16);
+      } else if (eased < 0.88) {
         pulse = -1;
       } else {
-        pulse = -1 + smooth(Math.max(0, Math.min(1, (phase - 0.88) / 0.12)));
+        pulse = -1 + smooth(Math.max(0, Math.min(1, (eased - 0.88) / 0.12)));
       }
 
-      const strength = amp * 0.92;
-      const stretch = amp * 0.92;
-      const squash = pulse >= 0 ? pulse * strength : pulse * stretch;
+      // 2. 停顿时的高频果冻微颤余震 (让停顿的时候不是死板静态，而是像真实软糖那样在微颤！)
+      const jiggleTremor = Math.sin(theta * 3.5) * Math.cos(theta * 2.5) * 0.14 * amp;
 
-      const scaleX = 1 + squash;
-      const scaleY = 1 - squash;
+      // 3. 动态压扁与拉伸量
+      const strength = amp * 0.95;
+      const stretch = amp * 0.95;
+      const squash = (pulse >= 0 ? pulse * strength : pulse * stretch) + jiggleTremor;
+
+      const scaleX = 1 + squash * 1.18;
+      const scaleY = 1 - squash * 0.92;
+
+      // 4. 垂直腾空高度与触地重力感 (起跳拉伸时有真实的离地腾空感与滞空感！)
+      const liftFactor = Math.max(0, -pulse);
+      const translateY = -amp * 32 * Math.pow(liftFactor, 1.25);
+
+      // 5. 动感俏皮微倾与惯性摆头 (告别电梯活塞式僵硬感，赋予玩偶灵魂！)
+      const rotation = Math.sin(theta) * 0.052 * (1 + amp * 0.5);
+
+      // 6. 微小软糖剪切扭动
+      const skewX = Math.sin(theta * 2) * 0.035 * amp;
 
       return {
         scaleX,
         scaleY,
         translateX: 0,
-        translateY: 0,
-        rotation: 0,
-        skewX: 0,
+        translateY,
+        rotation,
+        skewX,
         skewY: 0,
         anchorX: 0.5,
         anchorY: 0.95,
@@ -174,33 +193,30 @@ function computeRawTransform(
 
     case 'jelly-duang': {
       const eased = evaluateEasingPhase(phase, easing);
+      const theta = 2 * Math.PI * eased;
       let scaleX = 1;
       let scaleY = 1;
       let translateY = 0;
 
       if (eased < 0.25) {
-        // Stage 1: 蓄力深蹲蓄势 (0% ~ 25%)
         const t = eased / 0.25;
         const squat = Math.sin(Math.PI * t * 0.5);
         scaleY = 1 - amp * 1.4 * squat;
         scaleX = 1 + amp * 1.5 * squat;
         translateY = 0;
       } else if (eased < 0.52) {
-        // Stage 2: 瞬间爆发回弹拉伸滞空 (25% ~ 52%)
         const t = (eased - 0.25) / 0.27;
         const launch = Math.sin(Math.PI * t);
         scaleY = 1 + amp * 1.35 * launch;
         scaleX = 1 - amp * 0.7 * launch;
         translateY = -amp * 38 * Math.sin(Math.PI * t);
       } else if (eased < 0.76) {
-        // Stage 3: 重力下坠触地二次Duang形变 (52% ~ 76%)
         const t = (eased - 0.52) / 0.24;
         const impact = Math.sin(Math.PI * t);
         scaleY = 1 - amp * 0.7 * impact;
         scaleX = 1 + amp * 0.8 * impact;
         translateY = 0;
       } else {
-        // Stage 4: 阻尼微颤逐渐平息 (76% ~ 100%)
         const t = (eased - 0.76) / 0.24;
         const decay = Math.exp(-3.5 * t);
         const ripple = Math.sin(4 * Math.PI * t) * decay;
@@ -209,12 +225,14 @@ function computeRawTransform(
         translateY = 0;
       }
 
+      const rotation = Math.sin(theta) * 0.038 * (1 + amp * 0.4);
+
       return {
         scaleX,
         scaleY,
         translateX: 0,
         translateY,
-        rotation: 0,
+        rotation,
         skewX: 0,
         skewY: 0,
         anchorX: 0.5,
@@ -833,33 +851,40 @@ export function drawBounceFrame(
           targetCtx.translate(relRootX, relRootY);
         }
 
-        if (userRotRad !== 0) targetCtx.rotate(userRotRad);
-
         // 弹力方向角度 (自调任意弹动方向 0°~360°)
         const bounceDirRad = ((part.bounceDirectionAngle || 0) * Math.PI) / 180;
 
         if (part.type === 'cutout' || !part.type) {
-          // 👂 耳朵/呆毛专用有机柔韧弯曲物理：
-          // 底部与扎根锚定线紧密重合，底边位移严格为 0 绝对不动，只有上部沿弹力方向柔顺弯曲甩动！
-          const slices = 36;
+          // 👂 耳朵/呆毛专用绝对锁死底边物理：
+          // 底边与身体锚定线严格重合且位移与旋转绝对为 0，仅上部沿弹力方向柔顺弯曲！
+          const slices = 40;
           const sliceH = partDrawH / slices;
           const srcSliceH = pImg.naturalHeight / slices;
 
           // Oscillation along bounce direction
-          const oscMag = (jiggleRot !== 0 ? jiggleRot : (jiggleScaleX - 1) * 2.2) * partDrawW * 1.35;
+          const oscMag = (jiggleRot !== 0 ? jiggleRot : (jiggleScaleX - 1) * 2.2) * partDrawW * 1.4;
           const dirX = Math.sin(bounceDirRad !== 0 ? bounceDirRad : Math.PI / 2);
           const dirY = -Math.cos(bounceDirRad !== 0 ? bounceDirRad : 0);
 
           for (let s = 0; s < slices; s++) {
-            // s = slices - 1 为耳朵底部（紧贴身体锚定线），s = 0 为耳朵顶部尖尖
+            // s = slices - 1 为耳朵底边 (紧贴身体锚定线)，s = 0 为耳朵顶部耳尖
             const v = (slices - 1 - s) / (slices - 1); // 0 at bottom seam, 1 at top tip
-            const weight = Math.pow(v, 1.55);
+            const weight = Math.pow(v, 1.8);
 
-            // 底部 v = 0 时，dispX = 0, dispY = 0！耳朵底部与锚定线完全重叠绝对不动！
+            // 渐进式旋转：底边 0 旋转（防止耳根歪斜脱节），上部逐渐过渡到用户设定的旋转角
+            const sliceRot = userRotRad * v;
+
+            // 底边 v = 0 时，dispX = 0, dispY = 0！底边绝对不动！
             const dispX = dirX * oscMag * weight;
             const dispY = (bounceDirRad !== 0 ? dirY * oscMag * weight * 0.45 : 0);
 
+            // 局部坐标：底边在 y = 0，耳尖在 y = -partDrawH
+            const localSliceY = -partDrawH + s * sliceH;
+
             targetCtx.save();
+            if (sliceRot !== 0) {
+              targetCtx.rotate(sliceRot);
+            }
             targetCtx.scale(mulX, mulY);
             targetCtx.drawImage(
               pImg,
@@ -867,8 +892,8 @@ export function drawBounceFrame(
               s * srcSliceH,
               pImg.naturalWidth,
               srcSliceH,
-              dx + dispX,
-              dy + s * sliceH + dispY,
+              -partDrawW * 0.5 + dispX,
+              localSliceY + dispY,
               partDrawW,
               sliceH + 0.6
             );
@@ -876,6 +901,7 @@ export function drawBounceFrame(
           }
         } else {
           // 贴图/挂件/文字：按弹力方向自由弹射与晃动
+          if (userRotRad !== 0) targetCtx.rotate(userRotRad);
           if (bounceDirRad !== 0) targetCtx.rotate(bounceDirRad);
           if (jiggleRot !== 0) targetCtx.rotate(jiggleRot);
           targetCtx.scale(jiggleScaleX * mulX, jiggleScaleY * mulY);

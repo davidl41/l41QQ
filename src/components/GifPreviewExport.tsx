@@ -92,7 +92,7 @@ export const GifPreviewExport: React.FC<GifPreviewExportProps> = ({
   });
 
   const animFrameIdRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : Date.now());
   const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const latestTransformRef = useRef<BounceTransform>({
     scaleX: 1,
@@ -119,7 +119,7 @@ export const GifPreviewExport: React.FC<GifPreviewExportProps> = ({
 
     const render = () => {
       if (!active) return;
-      const now = Date.now();
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
       let phase = latestPhaseRef.current;
       if (isPlaying) {
         const elapsedSec = (now - startTimeRef.current) / 1000;
@@ -898,7 +898,7 @@ export const GifPreviewExport: React.FC<GifPreviewExportProps> = ({
         setSnapbackDecay({
           ampX: dx,
           ampY: dy,
-          startTime: Date.now(),
+          startTime: typeof performance !== 'undefined' ? performance.now() : Date.now(),
         });
         playCartoonBounceSound(Math.min(2.0, Math.hypot(dx, dy) / 45));
       }

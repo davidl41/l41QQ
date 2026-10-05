@@ -139,44 +139,53 @@ function computeRawTransform(
     }
 
     case 'viral-doll': {
-      // 🧸 互动玩偶极致 Q 弹物理引擎 (复刻自 Wallpaper Engine 原版 physics.js + 动感惯性摆头与次级果冻微颤)
-      // 解决原先死板单轴伸缩的僵硬感：加入腾空离地感、布丁高频微颤与俏皮微倾摆头！
+      // 🧸 互动玩偶极致丝滑 Q 弹物理引擎 (五阶 SmootherStep 平滑过渡 + C2 连续首尾无缝循环 + 软萌微颤)
       const eased = evaluateEasingPhase(phase, easing);
       const theta = 2 * Math.PI * eased;
 
-      // 1. 核心形变周期 (0~0.44 下蹲卡点停一下, 0.44~0.60 极速反转弹射, 0.60~0.88 拔高悬停卡点, 0.88~1.00 触地反弹)
-      const smooth = (t: number) => t * t * (3 - 2 * t);
+      const smootherstep = (t: number) => {
+        const c = Math.max(0, Math.min(1, t));
+        return c * c * c * (c * (c * 6 - 15) + 10);
+      };
+
+      // 1. 无缝首尾粘合的丝滑变形周期 (首尾导数严格为 0，彻底消除循环接缝处的机械硬顿挫):
+      // 0.00 ~ 0.28: 下蹲停顿 (光滑保持 1.0)
+      // 0.28 ~ 0.50: 丝滑弹射拉伸 (1.0 -> -1.0，零冲量突变)
+      // 0.50 ~ 0.78: 上方悬停 (光滑保持 -1.0)
+      // 0.78 ~ 1.00: 丝滑下坠回归 (-1.0 -> 1.0，完全平滑接回 0.00)
       let pulse = 0;
-      if (eased < 0.44) {
-        pulse = 1;
-      } else if (eased < 0.60) {
-        pulse = 1 - 2 * smooth((eased - 0.44) / 0.16);
-      } else if (eased < 0.88) {
-        pulse = -1;
+      if (eased < 0.28) {
+        pulse = 1.0;
+      } else if (eased < 0.50) {
+        const u = (eased - 0.28) / 0.22;
+        pulse = 1.0 - 2.0 * smootherstep(u);
+      } else if (eased < 0.78) {
+        pulse = -1.0;
       } else {
-        pulse = -1 + smooth(Math.max(0, Math.min(1, (eased - 0.88) / 0.12)));
+        const u = (eased - 0.78) / 0.22;
+        pulse = -1.0 + 2.0 * smootherstep(u);
       }
 
-      // 2. 停顿时的高频果冻微颤余震 (让停顿的时候不是死板静态，而是像真实软糖那样在微颤！)
-      const jiggleTremor = Math.sin(theta * 3.5) * Math.cos(theta * 2.5) * 0.14 * amp;
+      // 2. 真实果冻次级软萌微颤波 (周期性无缝谐波，停顿段也像活体布丁般微颤)
+      const jiggleTremor = Math.sin(theta * 2) * Math.cos(theta * 3) * 0.11 * amp;
 
       // 3. 动态压扁与拉伸量
       const strength = amp * 0.95;
       const stretch = amp * 0.95;
       const squash = (pulse >= 0 ? pulse * strength : pulse * stretch) + jiggleTremor;
 
-      const scaleX = 1 + squash * 1.18;
+      const scaleX = 1 + squash * 1.15;
       const scaleY = 1 - squash * 0.92;
 
-      // 4. 垂直腾空高度与触地重力感 (起跳拉伸时有真实的离地腾空感与滞空感！)
+      // 4. 垂直腾空高度与滞空感
       const liftFactor = Math.max(0, -pulse);
-      const translateY = -amp * 32 * Math.pow(liftFactor, 1.25);
+      const translateY = -amp * 30 * smootherstep(liftFactor);
 
-      // 5. 动感俏皮微倾与惯性摆头 (告别电梯活塞式僵硬感，赋予玩偶灵魂！)
-      const rotation = Math.sin(theta) * 0.052 * (1 + amp * 0.5);
+      // 5. 动感俏皮微倾 (与拉伸节奏同步微晃)
+      const rotation = Math.sin(theta) * 0.042 * (1 + amp * 0.4);
 
       // 6. 微小软糖剪切扭动
-      const skewX = Math.sin(theta * 2) * 0.035 * amp;
+      const skewX = Math.sin(theta * 2) * 0.025 * amp;
 
       return {
         scaleX,
@@ -851,7 +860,7 @@ export function drawBounceFrame(
           for (let s = 0; s < slices; s++) {
             // s = slices - 1 为耳朵底边 (紧贴身体锚定线)，s = 0 为耳朵顶部耳尖
             const v = (slices - 1 - s) / (slices - 1); // 0 at bottom seam, 1 at top tip
-            const weight = Math.pow(v, 1.8);
+            const weight = v * v * (3 - 2 * v); // 极度丝滑的三阶 Hermite 柔性弯曲曲线
 
             // 渐进式旋转：底边 0 旋转（防止耳根歪斜脱节），上部逐渐过渡到用户设定的旋转角
             const sliceRot = userRotRad * v;

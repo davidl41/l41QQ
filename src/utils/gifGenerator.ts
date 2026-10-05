@@ -691,39 +691,21 @@ export function drawBounceFrame(
     const imgOffsetX = -drawW * bodyTransform.anchorX;
     const imgOffsetY = -drawH * bodyTransform.anchorY;
 
-    // 🍮 非线性果冻弧形鼓胀渲染 (让果冻挤压时肚子向外饱满弧形膨胀，起跳时收紧)
-    if (jellyBulge !== false && (Math.abs(bodyTransform.scaleX - 1) > 0.015 || Math.abs(bodyTransform.scaleY - 1) > 0.015)) {
-      const slices = 56;
-      const sliceH = drawH / slices;
-      const srcSliceH = sourceH / slices;
-      const bulgeFactor = bodyTransform.scaleX - 1;
+    // 🧸 原版 Wallpaper Engine 互动娃娃高清物理贴地渲染
+    // 彻底移除多切片造成的画面割裂与横纹，底边脚底死死贴地，全身整体纯净高清Q弹
+    const curW = drawW * bodyTransform.scaleX;
+    const curH = drawH * bodyTransform.scaleY;
+    const curOffX = -curW * bodyTransform.anchorX;
+    const curOffY = -curH * bodyTransform.anchorY;
 
-      for (let s = 0; s < slices; s++) {
-        const yRatio = s / slices;
-        // Parabolic belly curve (0 at top and bottom, peak at belly yRatio=0.55)
-        const bellyCurve = Math.sin(Math.PI * Math.pow(yRatio, 0.85));
-        const sliceW = drawW * Math.max(0.4, 1 + bulgeFactor * bellyCurve * 1.4);
-        const sliceX = -sliceW * bodyTransform.anchorX;
-        const sliceY = -drawH * bodyTransform.anchorY * bodyTransform.scaleY + s * sliceH * bodyTransform.scaleY;
+    if (!onlyPartBounces && dirAngle !== 0) {
+      targetCtx.rotate(dirAngle);
+    }
 
-        targetCtx.drawImage(
-          bodySourceToDraw,
-          0,
-          s * srcSliceH,
-          sourceW,
-          srcSliceH,
-          sliceX,
-          sliceY,
-          sliceW,
-          sliceH * bodyTransform.scaleY + 0.6
-        );
-      }
-    } else {
-      targetCtx.scale(bodyTransform.scaleX, bodyTransform.scaleY);
-      if (!onlyPartBounces && dirAngle !== 0) {
-        targetCtx.rotate(-dirAngle);
-      }
-      targetCtx.drawImage(bodySourceToDraw, imgOffsetX, imgOffsetY, drawW, drawH);
+    targetCtx.drawImage(bodySourceToDraw, curOffX, curOffY, curW, curH);
+
+    if (!onlyPartBounces && dirAngle !== 0) {
+      targetCtx.rotate(-dirAngle);
     }
 
     // ✨ 水润果冻弧形高光反光层 (日系动漫布丁高光质感)

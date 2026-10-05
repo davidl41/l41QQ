@@ -139,71 +139,32 @@ function computeRawTransform(
     }
 
     case 'viral-doll': {
-      // 🧸 网络爆火魔性Q弹玩偶：下面停一下，瞬间高速弹射拉伸，上面停一下，瞬间下坠触地
-      const eased = evaluateEasingPhase(phase, easing);
-      let scaleX = 1;
-      let scaleY = 1;
-      let translateY = 0;
-      let rotation = 0;
-
-      if (eased < 0.28) {
-        // 阶段 1: 下面停一下 (蓄势深蹲持定 28% 时间，带微小呼吸震颤)
-        const t = eased / 0.28;
-        const quiver = Math.sin(t * Math.PI * 4) * 0.02 * amp;
-        scaleY = 1 - amp * 1.35 + quiver;
-        scaleX = 1 + amp * 1.45 - quiver;
-        translateY = 0;
-        rotation = Math.sin(t * Math.PI * 2) * 0.02;
-      } else if (eased < 0.44) {
-        // 阶段 2: 瞬间高速弹射拔高拉伸 (Snap Up!)
-        const t = (eased - 0.28) / 0.16;
-        const progress = Math.sin(t * Math.PI * 0.5);
-        const yStart = 1 - amp * 1.35;
-        const yEnd = 1 + amp * 1.35;
-        const xStart = 1 + amp * 1.45;
-        const xEnd = 1 - amp * 0.7;
-
-        scaleY = yStart + (yEnd - yStart) * progress;
-        scaleX = xStart + (xEnd - xStart) * progress;
-        translateY = -amp * 46 * progress;
-        rotation = (t - 0.5) * 0.05;
-      } else if (eased < 0.72) {
-        // 阶段 3: 上面停一下 (高位拉伸滞空停顿 28% 时间，魔性微倾微晃)
-        const t = (eased - 0.44) / 0.28;
-        const airWobble = Math.sin(t * Math.PI * 3) * 0.025 * amp;
-        scaleY = 1 + amp * 1.35 + airWobble;
-        scaleX = 1 - amp * 0.7 - airWobble;
-        translateY = -amp * 46;
-        rotation = Math.sin(t * Math.PI * 2) * 0.035;
-      } else if (eased < 0.88) {
-        // 阶段 4: 瞬间高速下坠回落 (Snap Down!)
-        const t = (eased - 0.72) / 0.16;
-        const progress = Math.sin(t * Math.PI * 0.5);
-        const yStart = 1 + amp * 1.35;
-        const yEnd = 1 - amp * 1.25;
-        const xStart = 1 - amp * 0.7;
-        const xEnd = 1 + amp * 1.35;
-
-        scaleY = yStart + (yEnd - yStart) * progress;
-        scaleX = xStart + (xEnd - xStart) * progress;
-        translateY = -amp * 46 * (1 - progress);
-        rotation = (0.5 - t) * 0.04;
+      // 🧸 音乐互动娃娃原版物理算法 (来自 Wallpaper Engine 原版 physics.js: deformationCycle)
+      const smooth = (t: number) => t * t * (3 - 2 * t);
+      let pulse = 0;
+      if (phase < 0.44) {
+        pulse = 1;
+      } else if (phase < 0.60) {
+        pulse = 1 - 2 * smooth((phase - 0.44) / 0.16);
+      } else if (phase < 0.88) {
+        pulse = -1;
       } else {
-        // 阶段 5: 触地反弹平滑过渡回阶段 1
-        const t = (eased - 0.88) / 0.12;
-        const recoil = Math.sin(t * Math.PI);
-        scaleY = 1 - amp * 1.35 - amp * 0.12 * recoil;
-        scaleX = 1 + amp * 1.45 + amp * 0.12 * recoil;
-        translateY = 0;
-        rotation = 0;
+        pulse = -1 + smooth(Math.max(0, Math.min(1, (phase - 0.88) / 0.12)));
       }
+
+      const strength = amp * 0.92;
+      const stretch = amp * 0.92;
+      const squash = pulse >= 0 ? pulse * strength : pulse * stretch;
+
+      const scaleX = 1 + squash;
+      const scaleY = 1 - squash;
 
       return {
         scaleX,
         scaleY,
         translateX: 0,
-        translateY,
-        rotation,
+        translateY: 0,
+        rotation: 0,
         skewX: 0,
         skewY: 0,
         anchorX: 0.5,

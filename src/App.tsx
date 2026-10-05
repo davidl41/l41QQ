@@ -17,8 +17,8 @@ export default function App() {
 
   const [bounceConfig, setBounceConfig] = useState<BounceConfig>({
     motion: 'viral-doll',
-    amplitude: 0.28,
-    speed: 1.1,
+    amplitude: 0.22,
+    speed: 1.8,
     easing: 35,
     fps: 30,
     frameCount: 30,

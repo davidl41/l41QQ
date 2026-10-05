@@ -113,9 +113,9 @@ const MOTION_PRESET_CONFIGS: Record<string, {
   impactRipple: boolean;
 }> = {
   'viral-doll': {
-    amplitude: 0.30,
-    speed: 1.15,
-    easing: 50,
+    amplitude: 0.22,
+    speed: 1.8,
+    easing: 35,
     bounceDirection: 'custom',
     bounceAngle: 0,
     groundShadow: true,

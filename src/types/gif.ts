@@ -1,12 +1,13 @@
 export type BounceMotion =
-  | 'spring-sway'      // 弹簧摇摆 (底部固定不动，上面左右弹动摇摆，幅度随时间衰减)
+  | 'viral-doll'       // 魔性Q弹玩偶 (全网爆火：下面停一下，瞬间弹射拉伸，上面停一下)
   | 'jelly-duang'      // 经典果冻Duang回弹 (底部固脚垂直挤压拉伸)
-  | 'belly-breathe'    // 腮帮/肚子膨胀鼓动 (双向节奏鼓气收缩)
-  | 'jelly-jiggle'     // 高频布丁果冻微颤 (如碰触布丁般的密集体态震颤)
-  | 'trampoline-hop'   // 软糖蹦床超弹跳 (深度压缩蓄力 -> 冲刺拉伸 -> 滞空微颤 -> Duang落地)
-  | 'floating-bubble'  // 漂浮果冻软萌漫游 (零重力失重慢摇与呼吸)
+  | 'spring-sway'      // 弹簧摇摆 (左右弹动摇摆)
+  | 'trampoline-hop'   // 软糖蹦床超弹跳 (深度压缩蓄力冲刺拉伸)
+  | 'jelly-jiggle'     // 高频布丁果冻微颤 (密集体态震颤)
   | 'dough-knead'      // 糯米团挤压揉捏 (对角线挤压形变与回弹)
-  | 'heartbeat-pulse'; // 心跳砰砰律动 (双连发律动)
+  | 'belly-breathe'    // 兼容字段
+  | 'floating-bubble'  // 兼容字段
+  | 'heartbeat-pulse'; // 兼容字段
 
 export type GifBgType = 'transparent' | 'white' | 'checker' | 'pink' | 'dark';
 

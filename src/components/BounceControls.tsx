@@ -58,11 +58,11 @@ const MOTION_OPTIONS: {
   highlight?: boolean;
 }[] = [
   {
-    id: 'spring-sway',
-    name: '弹簧左右摇摆',
-    emoji: '🌾',
-    desc: '左右自然钟摆式回弹摇摆，带柔韧弹簧滞后与微微下蹲形变',
-    tag: '治愈摆动',
+    id: 'viral-doll',
+    name: '魔性Q弹玩偶',
+    emoji: '🧸',
+    desc: '全网爆火玩偶节奏：下蹲定格停一下，瞬间弹射拉伸上去停一下，魔性洗脑',
+    tag: '全网爆火',
     highlight: true,
   },
   {
@@ -74,18 +74,18 @@ const MOTION_OPTIONS: {
     highlight: true,
   },
   {
+    id: 'spring-sway',
+    name: '弹簧左右摇摆',
+    emoji: '🌾',
+    desc: '左右自然钟摆式回弹摇摆，带柔韧弹簧滞后与微微下蹲形变',
+    tag: '治愈摆动',
+  },
+  {
     id: 'trampoline-hop',
     name: '蹦床超弹跳',
     emoji: '🦘',
     desc: '深度压缩蓄力冲刺拉伸，滞空微颤与Duang轻盈落地',
     tag: '动感欢脱',
-  },
-  {
-    id: 'belly-breathe',
-    name: '腮帮肚肚鼓动',
-    emoji: '🐡',
-    desc: '脸颊与身体两侧横向向外鼓起膨胀，傲娇生气或吃饱鼓鼓',
-    tag: '搞怪膨胀',
   },
   {
     id: 'jelly-jiggle',
@@ -95,29 +95,15 @@ const MOTION_OPTIONS: {
     tag: '布丁微颤',
   },
   {
-    id: 'floating-bubble',
-    name: '漂浮软萌漫游',
-    emoji: '🫧',
-    desc: '如微风中漂浮的软萌泡泡，零重力失重慢摇与呼吸起伏',
-    tag: '失重漫游',
-  },
-  {
     id: 'dough-knead',
     name: '糯米团挤压揉捏',
     emoji: '🥟',
     desc: '对角线与水平交替挤压拉伸形变，像被手掌轻柔揉捏的软糯麻薯糍粑',
     tag: '软糯形变',
   },
-  {
-    id: 'heartbeat-pulse',
-    name: '心跳砰砰律动',
-    emoji: '💓',
-    desc: '双连发扑通扑通搏动收缩与扩张，治愈且具有节奏感',
-    tag: '治愈节拍',
-  },
 ];
 
-const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
+const MOTION_PRESET_CONFIGS: Record<string, {
   amplitude: number;
   speed: number;
   easing: number;
@@ -126,14 +112,14 @@ const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
   groundShadow: boolean;
   impactRipple: boolean;
 }> = {
-  'spring-sway': {
-    amplitude: 0.28,
-    speed: 1.1,
-    easing: 35,
+  'viral-doll': {
+    amplitude: 0.30,
+    speed: 1.15,
+    easing: 50,
     bounceDirection: 'custom',
     bounceAngle: 0,
     groundShadow: true,
-    impactRipple: false,
+    impactRipple: true,
   },
   'jelly-duang': {
     amplitude: 0.32,
@@ -144,6 +130,15 @@ const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
     groundShadow: true,
     impactRipple: true,
   },
+  'spring-sway': {
+    amplitude: 0.28,
+    speed: 1.1,
+    easing: 35,
+    bounceDirection: 'custom',
+    bounceAngle: 0,
+    groundShadow: true,
+    impactRipple: false,
+  },
   'trampoline-hop': {
     amplitude: 0.38,
     speed: 1.3,
@@ -152,15 +147,6 @@ const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
     bounceAngle: 0,
     groundShadow: true,
     impactRipple: true,
-  },
-  'belly-breathe': {
-    amplitude: 0.24,
-    speed: 1.1,
-    easing: 35,
-    bounceDirection: 'custom',
-    bounceAngle: 0,
-    groundShadow: false,
-    impactRipple: false,
   },
   'jelly-jiggle': {
     amplitude: 0.15,
@@ -171,15 +157,6 @@ const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
     groundShadow: true,
     impactRipple: false,
   },
-  'floating-bubble': {
-    amplitude: 0.18,
-    speed: 0.8,
-    easing: 30,
-    bounceDirection: 'custom',
-    bounceAngle: 15,
-    groundShadow: false,
-    impactRipple: false,
-  },
   'dough-knead': {
     amplitude: 0.26,
     speed: 1.0,
@@ -188,15 +165,6 @@ const MOTION_PRESET_CONFIGS: Record<BounceMotion, {
     bounceAngle: 45,
     groundShadow: true,
     impactRipple: true,
-  },
-  'heartbeat-pulse': {
-    amplitude: 0.22,
-    speed: 1.5,
-    easing: 55,
-    bounceDirection: 'custom',
-    bounceAngle: 0,
-    groundShadow: false,
-    impactRipple: false,
   },
 };
 

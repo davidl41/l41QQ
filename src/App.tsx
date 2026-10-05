@@ -16,7 +16,7 @@ export default function App() {
   const [localMaskCanvas, setLocalMaskCanvas] = useState<HTMLCanvasElement | null>(null);
 
   const [bounceConfig, setBounceConfig] = useState<BounceConfig>({
-    motion: 'spring-sway',
+    motion: 'viral-doll',
     amplitude: 0.28,
     speed: 1.1,
     easing: 35,
